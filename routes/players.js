@@ -1,11 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var playersCtrl = require('../controllers/players')
-
+const UserModel = require('../models/userModel')
 const asyncMiddleware = require('../middleware/asyncMiddleware');
 
 /* GET users listing. */
-router.get('/', playersCtrl.index);
+
 
 router.post('/signup', asyncMiddleware( async (req, res, next) => {
   const { name, email, password } = req.body;
