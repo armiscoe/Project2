@@ -4,7 +4,11 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var logger = require('morgan');
+const secureRoutes = require('./routes/secure');
+
 require('./config/database');
+require('dotenv').config();
+
 
 var indexRouter = require('./routes/index');
 var playersRouter = require('./routes/players');
@@ -15,16 +19,24 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+app.use(bodyParser.urlencoded({ extended: false })); // parse application/x-www-form-urlencoded
+app.use(bodyParser.json()); // parse application/json
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(bodyParser.urlencoded({extended:false}));
-app.use(bodyParser.json());
+app.use("/public", express.static(__dirname + "/public"));
+
+
+app.get('/status', (req, res, next) => {
+  res.status(200);
+  res.json({ 'status': 'ok' });
+});
+
 
 app.use('/', indexRouter);
 app.use('/players', playersRouter);
+app.use('/', secureRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
