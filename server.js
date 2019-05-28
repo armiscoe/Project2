@@ -5,14 +5,15 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var logger = require('morgan');
 const mongoose = require('mongoose');
-const secureRoutes = require('./routes/secure');
+const passport = require('passport');
 
 require('./config/database');
 require('dotenv').config();
 
 
-var indexRouter = require('./routes/index');
-var playersRouter = require('./routes/players');
+var routes = require('./routes/index');
+const secureRoutes = require('./routes/secure');
+
 
 const uri = process.env.MONGO_CONNECTION_URL;
 mongoose.connect(uri, { useNewUrlParser : true, useCreateIndex: true });
@@ -27,29 +28,36 @@ mongoose.connection.on('connected', function () {
 
 var app = express();
 
-// view engine setup
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
-
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use("/public", express.static(__dirname + "/public"));
 app.use(bodyParser.urlencoded({ extended: false })); // parse application/x-www-form-urlencoded
 app.use(bodyParser.json()); // parse application/json
+app.use(cookieParser());
+
+// require passport auth
+require('./auth/auth');
 
 
-app.get('/status', (req, res, next) => {
-  res.status(200);
-  res.json({ 'status': 'ok' });
+
+app.get('/game.html', passport.authenticate('jwt', { session : false }), function (req, res) {
+  res.sendFile(__dirname + '/public/game.html');
+});
+
+app.use(express.static(__dirname + "/public"))
+
+app.get('/', function (req, res) {
+  res.sendFile(__dirname + '/index.html');
 });
 
 
-app.use('/', indexRouter);
-app.use('/players', playersRouter);
-app.use('/', secureRoutes);
+app.use('/', routes);
+app.use('/', passport.authenticate('jwt', { session : false }), secureRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
