@@ -187,3 +187,15 @@ function playGame() {
     jimInterval = setInterval(() => { createJim() }, 1700)
 
 }
+
+$.ajax({
+    type: 'GET',
+    url: '/scores',
+    success: function(data) {
+      game = new Phaser.Game(config);
+      scores = data;
+    },
+    error: function(xhr) {
+      console.log(xhr);
+    }
+  });
